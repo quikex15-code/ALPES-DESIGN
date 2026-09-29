@@ -8,6 +8,22 @@
   // Our own scroll handles timing, so disable the CSS one to avoid double easing.
   document.documentElement.style.scrollBehavior = 'auto';
 
+  /* ---------- Intro ---------- */
+  var intro = document.getElementById('intro');
+  if (intro && document.documentElement.classList.contains('has-intro')) {
+    var root = document.documentElement;
+    function endIntro() { root.classList.add('intro-done'); }
+    intro.addEventListener('animationend', function (e) {
+      if (e.target === intro) endIntro();
+    });
+    // A click or a key skips the intro.
+    intro.addEventListener('click', endIntro);
+    document.addEventListener('keydown', function onKey() {
+      endIntro();
+      document.removeEventListener('keydown', onKey);
+    });
+  }
+
   /* ---------- Smooth scroll (0.3s) ---------- */
   function headerOffset() {
     var header = document.querySelector('.site-header');
