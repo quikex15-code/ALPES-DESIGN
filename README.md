@@ -22,7 +22,32 @@ Vous (fenêtre de dialogue) ──► Claude ──► outils de dessin ──�
    DXF que vous ouvrirez ensuite dans AutoCAD.
 4. La conversation garde le contexte : vous pouvez corriger, compléter, déplacer…
 
-## Installation (Windows, avec AutoCAD)
+## Essai rapide sans rien installer (Windows + AutoCAD)
+
+Le dossier `windows/` contient une version qui n'a besoin **que d'AutoCAD** : elle
+utilise PowerShell, déjà présent dans Windows 10 et 11.
+
+1. Sur GitHub, bouton vert **Code → Download ZIP**, puis décompressez le dossier
+   (clic droit → *Extraire tout*).
+2. Créez une clé API sur <https://console.anthropic.com> (*API Keys → Create Key*).
+   L'utilisation de l'API est payante à la consommation : prévoyez quelques euros de
+   crédit pour vos essais.
+3. Ouvrez AutoCAD avec un dessin (vide ou existant).
+4. Double-cliquez sur **`windows\Lancer-Assistant.bat`**. Au premier lancement,
+   collez votre clé API : elle est mémorisée pour les fois suivantes.
+5. La fenêtre de dialogue s'ouvre au-dessus d'AutoCAD : écrivez votre demande,
+   puis **Entrée**.
+
+Cette version sait tout faire, sauf écrire un fichier DXF sans AutoCAD : dessin,
+cotes, cartouche (`entreprise.json`) et profils. Pour les profils, placez vos DWG
+dans un dossier `Profils` à côté du dossier `windows`, ou définissez la variable
+`ALPES_PROFILS`.
+
+Pour changer de clé API, supprimez la variable d'environnement utilisateur
+`ANTHROPIC_API_KEY` (*Paramètres → Système → Informations système → Paramètres
+avancés → Variables d'environnement*) puis relancez l'assistant.
+
+## Installation de la version complète (Python)
 
 1. Installez [Python 3.10+](https://www.python.org/downloads/) (cochez « Add to PATH »).
 2. Dans un terminal, depuis ce dossier :
@@ -179,6 +204,8 @@ Pour utiliser un autre fichier : `--entreprise chemin\entreprise.json` ou la var
 | `autocad_assistant/agent.py` | Boucle de conversation avec Claude |
 | `autocad_assistant/gui.py` | Fenêtre de dialogue (tkinter) |
 | `autocad_assistant/__main__.py` | Point d'entrée et options |
+| `windows/AssistantAutoCAD.ps1` | Version sans installation (PowerShell), mêmes fonctions |
+| `windows/Lancer-Assistant.bat` | Lanceur à double-cliquer de la version sans installation |
 
 **Ajouter un outil** (ex. hachures, blocs) : ajoutez la méthode dans les deux moteurs
 de `backends.py`, déclarez l'outil dans `TOOLS` et son exécution dans `_handlers`
