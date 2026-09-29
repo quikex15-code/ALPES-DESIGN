@@ -208,7 +208,10 @@ Site statique de l'agence (HTML/CSS/JS vanilla, aucune dépendance) :
 - Le dossier `site/` peut aussi être déposé tel quel sur n'importe quel hébergement
   statique (Netlify, Infomaniak…).
 - Formulaire de contact : validation côté client, puis ouverture de la messagerie
-  du visiteur avec la demande pré-remplie vers `contact@alpes-design.ch`
+  du visiteur avec la demande pré-remplie vers `contact@alpes-design.com`
   (constante `CONTACT_EMAIL` dans `script.js`). Pour un envoi direct sans
   messagerie, branchez un service de formulaires (Formspree, Netlify Forms…).
-- À compléter : le numéro de téléphone (`+41 XX XXX XX XX` et `tel:` dans `index.html`).
+- Plans du portfolio : déposez les images dans `site/plans/` sous les noms
+  `projet-1.jpg`, `projet-2.jpg`, `projet-3.jpg` (dans l'ordre des projets).
+  Un clic sur la vignette ouvre le plan en grand. Tant qu'un fichier manque,
+  le projet s'affiche simplement sans image.
