@@ -110,6 +110,40 @@
     setTimeout(finish, DURATION + 50);
   }
 
+  /* ---------- Portfolio plans (lightbox) ---------- */
+  var lightbox = document.getElementById('lightbox');
+
+  document.querySelectorAll('.plan img').forEach(function (img) {
+    // Drop the frame if the plan file isn't there yet, instead of a broken image.
+    function hide() { img.closest('.plan').remove(); }
+    if (img.complete && img.naturalWidth === 0) hide();
+    else img.addEventListener('error', hide);
+  });
+
+  if (lightbox && typeof lightbox.showModal === 'function') {
+    var lbImg = lightbox.querySelector('.lightbox-img');
+    var lbCaption = lightbox.querySelector('.lightbox-caption');
+
+    document.querySelectorAll('.plan-open').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var img = btn.querySelector('img');
+        lbImg.src = img.currentSrc || img.src;
+        lbImg.alt = img.alt;
+        lbCaption.textContent = img.alt;
+        lightbox.showModal();
+      });
+    });
+
+    lightbox.querySelector('.lightbox-close').addEventListener('click', function () { lightbox.close(); });
+    // Click outside the image closes too.
+    lightbox.addEventListener('click', function (e) { if (e.target === lightbox) lightbox.close(); });
+  } else {
+    // Very old browsers: open the plan file directly.
+    document.querySelectorAll('.plan-open').forEach(function (btn) {
+      btn.addEventListener('click', function () { window.open(btn.querySelector('img').src, '_blank'); });
+    });
+  }
+
   /* ---------- Contact form ---------- */
   var form = document.getElementById('contact-form');
   if (!form) return;

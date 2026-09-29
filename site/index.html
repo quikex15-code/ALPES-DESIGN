@@ -103,18 +103,33 @@
         <h2 class="section-title">Projets récents</h2>
         <div class="grid-3">
           <div class="col">
+            <figure class="plan">
+              <button type="button" class="plan-open" aria-label="Agrandir le plan — Structure acier 250m²">
+                <img src="plans/projet-1.jpg" alt="Plan — Structure acier 250m²" loading="lazy" decoding="async">
+              </button>
+            </figure>
             <h3 class="item-title">Structure acier 250m²</h3>
             <p class="meta">Construction acier Switzerland</p>
             <p class="meta">25 dessins, 3 semaines</p>
             <span class="badge">Eurocode</span>
           </div>
           <div class="col">
+            <figure class="plan">
+              <button type="button" class="plan-open" aria-label="Agrandir le plan — Extension industrielle">
+                <img src="plans/projet-2.jpg" alt="Plan — Extension industrielle" loading="lazy" decoding="async">
+              </button>
+            </figure>
             <h3 class="item-title">Extension industrielle</h3>
             <p class="meta">Fabricant France</p>
             <p class="meta">40 plans, révisions incluses</p>
             <span class="badge">Normes CWB</span>
           </div>
           <div class="col">
+            <figure class="plan">
+              <button type="button" class="plan-open" aria-label="Agrandir le plan — Ossature acier légère">
+                <img src="plans/projet-3.jpg" alt="Plan — Ossature acier légère" loading="lazy" decoding="async">
+              </button>
+            </figure>
             <h3 class="item-title">Ossature acier légère</h3>
             <p class="meta">Partenaire Canada</p>
             <p class="meta">15 plans, 10 jours</p>
@@ -290,6 +305,12 @@
       <p class="footer-bottom">© 2026 ALPES DESIGN. Tous droits réservés.</p>
     </div>
   </footer>
+
+  <dialog class="lightbox" id="lightbox" aria-label="Plan agrandi">
+    <button type="button" class="lightbox-close" aria-label="Fermer">Fermer</button>
+    <img class="lightbox-img" alt="">
+    <p class="lightbox-caption"></p>
+  </dialog>
 
   <a href="#top" class="to-top" id="to-top" aria-label="Retour en haut">Top</a>
 

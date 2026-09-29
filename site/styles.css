@@ -138,6 +138,37 @@ ul { margin: 0; padding: 0; list-style: none; }
   border: 1px solid var(--line-strong); padding: 4px 12px;
 }
 
+/* Portfolio plans: thumbnail + lightbox */
+.plan { margin: 0 0 24px; }
+.plan-open {
+  display: block; width: 100%; padding: 0; cursor: zoom-in;
+  background: var(--white); border: 1px solid var(--line);
+  transition: border-color var(--t);
+}
+.plan-open:hover { border-color: var(--black); }
+.plan-open img {
+  display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain;
+  padding: 8px; background: var(--white);
+}
+
+.lightbox {
+  width: 100vw; height: 100vh; max-width: none; max-height: none;
+  margin: 0; padding: 56px 16px 16px; border: 0;
+  background: var(--white);
+  flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+.lightbox[open] { display: flex; }
+.lightbox::backdrop { background: rgba(0, 0, 0, 0.6); }
+.lightbox-img { max-width: 100%; max-height: calc(100vh - 136px); object-fit: contain; }
+.lightbox-caption { font-size: 14px; color: var(--text-2); text-align: center; }
+.lightbox-close {
+  position: absolute; top: 12px; right: 16px;
+  font: inherit; font-size: 14px; color: var(--black); cursor: pointer;
+  background: var(--white); border: 1px solid var(--line); padding: 8px 16px;
+  transition: border-color var(--t);
+}
+.lightbox-close:hover { border-color: var(--black); }
+
 /* ---------- Pricing table ---------- */
 .table-wrap { max-width: 900px; margin: 0 auto; }
 .pricing { width: 100%; border-collapse: collapse; font-size: 16px; }

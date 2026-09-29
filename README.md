@@ -171,4 +171,8 @@ Site statique de l'agence (HTML/CSS/JS vanilla, aucune dépendance) :
   du visiteur avec la demande pré-remplie vers `contact@alpes-design.ch`
   (constante `CONTACT_EMAIL` dans `script.js`). Pour un envoi direct sans
   messagerie, branchez un service de formulaires (Formspree, Netlify Forms…).
+- Plans du portfolio : déposez les images dans `site/plans/` sous les noms
+  `projet-1.jpg`, `projet-2.jpg`, `projet-3.jpg` (dans l'ordre des projets).
+  Un clic sur la vignette ouvre le plan en grand. Tant qu'un fichier manque,
+  le projet s'affiche simplement sans image.
 - À compléter : le numéro de téléphone (`+41 XX XXX XX XX` et `tel:` dans `index.html`).
