@@ -207,6 +207,10 @@ Site statique de l'agence (HTML/CSS/JS vanilla, aucune dépendance) :
   https://quikex15-code.github.io/ALPES-DESIGN/
 - Le dossier `site/` peut aussi être déposé tel quel sur n'importe quel hébergement
   statique (Netlify, Infomaniak…).
+- Intro : à l'arrivée, le logo se dessine en grand puis le site apparaît (≈ 2,5 s,
+  une fois par visite, passable d'un clic ou d'une touche, désactivée si le
+  visiteur a choisi de réduire les animations). Réglages dans `styles.css`,
+  section « Intro ».
 - Formulaire de contact : validation côté client, puis ouverture de la messagerie
   du visiteur avec la demande pré-remplie vers `contact@alpes-design.com`
   (constante `CONTACT_EMAIL` dans `script.js`). Pour un envoi direct sans

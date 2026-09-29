@@ -53,6 +53,24 @@ ul { margin: 0; padding: 0; list-style: none; }
 .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
 .container-narrow { max-width: 800px; }
 
+/* ---------- Intro (logo drawn, then the site appears) ---------- */
+.intro { display: none; }
+.has-intro .intro {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--white); color: var(--black); cursor: pointer;
+  /* Pure CSS timeline: the intro always goes away, even if JS fails. */
+  animation: intro-out 0.5s ease 2s forwards;
+}
+.intro-mark { width: clamp(120px, 28vw, 200px); height: auto; overflow: visible; }
+.intro-mark path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.intro-frame { animation: intro-draw 0.9s ease-in-out 0.15s forwards; }
+.intro-a     { animation: intro-draw 0.6s ease-in-out 0.8s forwards; }
+.intro-bar   { animation: intro-draw 0.25s ease-out 1.3s forwards; }
+.intro-done .intro { display: none; }
+@keyframes intro-draw { to { stroke-dashoffset: 0; } }
+@keyframes intro-out { to { opacity: 0; visibility: hidden; } }
+
 /* ---------- Header ---------- */
 .site-header {
   position: sticky; top: 0; z-index: 50;
