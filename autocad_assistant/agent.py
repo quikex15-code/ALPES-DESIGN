@@ -7,7 +7,8 @@ from typing import Callable
 import anthropic
 
 from .backends import DrawingBackend
-from .tools import TOOLS, ToolExecutor
+from .profiles import ProfileLibrary
+from .tools import ToolExecutor
 
 DEFAULT_MODEL = "claude-opus-5-5"
 
@@ -29,6 +30,18 @@ raisonnables et indique-les.
 dessiné, avec les dimensions principales. Réponds en français.
 """
 
+PROFILES_PROMPT = """
+Bibliothèque de profils :
+- Une bibliothèque de profils (menuiserie métallique Forster, etc.) est disponible. \
+Quand l'utilisateur cite un profil, une série ou une référence, trouve la référence \
+exacte avec search_profiles puis insère-la avec insert_profile. Ne redessine jamais \
+à la main un profil qui existe dans la bibliothèque.
+- Si plusieurs profils correspondent, propose les candidats à l'utilisateur plutôt que \
+d'en choisir un au hasard.
+- Sers-toi de l'encombrement renvoyé par insert_profile pour positionner les éléments \
+suivants (assemblages, vitrages, cotes) au bon endroit.
+"""
+
 # Retente automatiquement la requête sur un autre modèle en cas de refus.
 _BETAS = ["server-side-fallback-2026-07-01"]
 
@@ -37,9 +50,11 @@ class DrawingAssistant:
     """Garde l'historique de la conversation et exécute les dessins demandés."""
 
     def __init__(self, backend: DrawingBackend, model: str = DEFAULT_MODEL,
-                 client: anthropic.Anthropic | None = None, max_steps: int = 40) -> None:
+                 client: anthropic.Anthropic | None = None, max_steps: int = 40,
+                 library: ProfileLibrary | None = None) -> None:
         self.backend = backend
-        self.executor = ToolExecutor(backend)
+        self.executor = ToolExecutor(backend, library)
+        self.system = SYSTEM_PROMPT + (PROFILES_PROMPT if library else "")
         self.model = model
         self.client = client or anthropic.Anthropic()
         self.max_steps = max_steps
@@ -66,8 +81,8 @@ class DrawingAssistant:
             response = self.client.beta.messages.create(
                 model=self.model,
                 max_tokens=16000,
-                system=SYSTEM_PROMPT,
-                tools=TOOLS,
+                system=self.system,
+                tools=self.executor.tools,
                 messages=self.messages,
                 output_config={"effort": "medium"},
                 betas=_BETAS,

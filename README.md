@@ -53,10 +53,62 @@ Options :
 | `--mode autocad` | Exige AutoCAD (erreur s'il n'est pas ouvert) |
 | `--mode dxf --dxf plan.dxf` | Dessine dans un fichier DXF (sans AutoCAD, aussi sur Mac/Linux) |
 | `--console` | Dialogue dans le terminal au lieu de la fenêtre |
+| `--profils <dossier>` | Bibliothèque de profils (voir ci-dessous) |
 | `--model <id>` | Autre modèle Claude (par défaut `claude-opus-5-5`) |
 
 Par défaut (`--mode auto`), AutoCAD est utilisé s'il est accessible, sinon le fichier
 `dessin.dxf`, enregistré après chaque demande.
+
+## Bibliothèque de profils (Forster, etc.)
+
+L'assistant peut chercher et insérer vos profils au lieu de les redessiner.
+
+**1. Rangez les profils dans un dossier**, un fichier DWG (ou DXF) par profil.
+Les sous-dossiers servent de série ; le nom du fichier est la référence :
+
+```
+C:\Profils\
+  catalogue.csv              ← facultatif, mais recommandé
+  Forster Unico\
+    U1002.dwg
+    U1003.dwg
+  Forster Fuego Light\
+    F2001.dwg
+```
+
+**2. (Facultatif) Ajoutez un `catalogue.csv`** à la racine, exporté depuis Excel
+(séparateur `;` accepté). Seule la colonne `Reference` est obligatoire ; toutes
+les autres colonnes (description, poids, inertie, usage…) sont transmises à
+l'assistant pour qu'il choisisse le bon profil :
+
+```
+Reference;Description;Poids kg/m
+U1002;Dormant ouvrant intérieur;2,1
+F2001;Profilé coupe-feu EI30;3,4
+```
+
+**3. Lancez l'assistant en indiquant le dossier :**
+
+```bat
+python -m autocad_assistant --profils "C:\Profils"
+```
+
+ou une fois pour toutes : `setx ALPES_PROFILS "C:\Profils"`.
+
+Vous pouvez alors demander : « Insère un dormant Forster Unico à l'origine et un
+ouvrant à côté », « Quels profils coupe-feu EI30 as-tu ? », « Coupe verticale d'un
+châssis de 1200 mm avec le profil U1002 en haut et en bas »…
+
+Les profils sont insérés comme **blocs** (placés sur leur point de base, avec
+rotation, symétrie et échelle possibles). L'assistant reçoit leur encombrement réel
+pour aligner et coter la suite.
+
+Formats : en mode AutoCAD, les profils doivent être en `.dwg`. En mode fichier DXF,
+les `.dxf` sont lus directement ; les `.dwg` nécessitent l'outil gratuit
+[ODA File Converter](https://www.opendesign.com/guestfiles/oda_file_converter).
+
+> Les fichiers de la bibliothèque restent sur votre ordinateur : inutile (et
+> déconseillé, pour des questions de droits) de les ajouter à ce dépôt.
 
 ## Conventions
 
@@ -70,6 +122,7 @@ Par défaut (`--mode auto`), AutoCAD est utilisé s'il est accessible, sinon le 
 |---|---|
 | `autocad_assistant/backends.py` | Moteurs de dessin : AutoCAD (COM) et DXF (ezdxf) |
 | `autocad_assistant/tools.py` | Outils proposés à Claude et leur exécution |
+| `autocad_assistant/profiles.py` | Bibliothèque de profils : lecture du dossier, catalogue, recherche |
 | `autocad_assistant/agent.py` | Boucle de conversation avec Claude |
 | `autocad_assistant/gui.py` | Fenêtre de dialogue (tkinter) |
 | `autocad_assistant/__main__.py` | Point d'entrée et options |

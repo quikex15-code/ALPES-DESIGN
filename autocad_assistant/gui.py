@@ -11,6 +11,7 @@ from typing import Callable
 
 from .agent import DrawingAssistant
 from .backends import DrawingBackend
+from .profiles import ProfileLibrary
 
 WELCOME = (
     "Bonjour ! Décrivez ce que vous voulez dessiner, par exemple :\n"
@@ -21,7 +22,9 @@ WELCOME = (
 
 
 class ChatWindow:
-    def __init__(self, make_backend: Callable[[], DrawingBackend], model: str) -> None:
+    def __init__(self, make_backend: Callable[[], DrawingBackend], model: str,
+                 library: ProfileLibrary | None = None) -> None:
+        self.library = library
         self.root = tk.Tk()
         self.root.title("Assistant de dessin AutoCAD")
         self.root.geometry("620x680")
@@ -62,11 +65,13 @@ class ChatWindow:
             except ImportError:
                 pass
             backend = make_backend()
-            assistant = DrawingAssistant(backend, model=model)
+            assistant = DrawingAssistant(backend, model=model, library=self.library)
         except Exception as exc:
             self.ui_queue.put(("error", f"Démarrage impossible : {exc}\n"))
             return
-        self.ui_queue.put(("bot", f"Connecté à : {backend.name}\n\n{WELCOME}\n"))
+        profils = (f"Bibliothèque de profils : {len(self.library)} profils "
+                   f"({', '.join(self.library.series())})\n" if self.library else "")
+        self.ui_queue.put(("bot", f"Connecté à : {backend.name}\n{profils}\n{WELCOME}\n"))
         self.ui_queue.put(("ready", None))
 
         while True:

@@ -46,6 +46,15 @@ class DrawingBackend(ABC):
                           layer: str | None = None) -> str: ...
 
     @abstractmethod
+    def insert_block_file(self, path: str, block_name: str, position: Point,
+                          rotation: float = 0.0, scale: float = 1.0, mirror: bool = False,
+                          layer: str | None = None) -> tuple[str, dict]:
+        """Insère le contenu d'un fichier DWG/DXF comme bloc.
+
+        Retourne (handle, encombrement {min, max, largeur, hauteur}).
+        """
+
+    @abstractmethod
     def list_entities(self) -> list[dict]: ...
 
     @abstractmethod
@@ -147,6 +156,29 @@ class AutoCADBackend(DrawingBackend):
         ent = self.msp.AddDimAligned(self._pt(start), self._pt(end), self._pt(mid))
         return self._finish(ent, layer)
 
+    def insert_block_file(self, path, block_name, position, rotation=0.0, scale=1.0,
+                          mirror=False, layer=None):
+        try:
+            block = self.doc.Blocks.Item(block_name)  # déjà chargé : on le réutilise
+            source = block.Name
+        except Exception:
+            source = os.path.abspath(path)
+            if not source.lower().endswith(".dwg"):
+                raise ValueError("En mode AutoCAD, les profils doivent être des fichiers .dwg "
+                                 f"(reçu : {os.path.basename(path)}).")
+        xs = -scale if mirror else scale
+        ent = self.msp.InsertBlock(self._pt(position), source, float(xs), float(scale),
+                                   float(scale), math.radians(rotation))
+        if source != block_name:
+            # AutoCAD nomme le bloc d'après le fichier : on le renomme pour le retrouver.
+            try:
+                self.doc.Blocks.Item(ent.Name).Name = block_name
+            except Exception:
+                pass
+        handle = self._finish(ent, layer)
+        mn, mx = ent.GetBoundingBox()
+        return handle, _bbox(mn, mx)
+
     def list_entities(self):
         result = []
         for i in range(self.msp.Count):
@@ -238,6 +270,40 @@ class DXFBackend(DrawingBackend):
         dim.render()
         return dim.dimension.dxf.handle
 
+    def _load_block(self, path: str, block_name: str) -> None:
+        if block_name in self.doc.blocks:
+            return
+        import ezdxf
+        from ezdxf.addons import Importer, odafc
+
+        if path.lower().endswith(".dwg"):
+            if not odafc.is_installed():
+                raise ValueError(
+                    "Lire un profil .dwg sans AutoCAD nécessite « ODA File Converter » "
+                    "(gratuit). Sinon, lancez l'assistant avec AutoCAD ouvert, ou "
+                    "convertissez la bibliothèque en .dxf.")
+            source = odafc.readfile(path)
+        else:
+            source = ezdxf.readfile(path)
+        base = source.header.get("$INSBASE", (0, 0, 0))
+        block = self.doc.blocks.new(block_name, base_point=base)
+        importer = Importer(source, self.doc)
+        importer.import_entities(source.modelspace(), target_layout=block)
+        importer.finalize()
+
+    def insert_block_file(self, path, block_name, position, rotation=0.0, scale=1.0,
+                          mirror=False, layer=None):
+        from ezdxf import bbox
+
+        self._load_block(path, block_name)
+        attribs = self._attribs(layer)
+        attribs.update(xscale=-scale if mirror else scale, yscale=scale, zscale=scale,
+                       rotation=rotation)
+        ref = self.msp.add_blockref(block_name, (position[0], position[1]), dxfattribs=attribs)
+        ext = bbox.extents([ref])
+        box = _bbox(ext.extmin, ext.extmax) if ext.has_data else {}
+        return ref.dxf.handle, box
+
     def list_entities(self):
         return [{"handle": e.dxf.handle, "type": e.dxftype(), "layer": e.dxf.layer}
                 for e in self.msp]
@@ -263,6 +329,11 @@ class DXFBackend(DrawingBackend):
             self.path = path
         self.doc.saveas(self.path)
         return os.path.abspath(self.path)
+
+
+def _bbox(mn: Point, mx: Point) -> dict:
+    return {"min": [round(mn[0], 3), round(mn[1], 3)], "max": [round(mx[0], 3), round(mx[1], 3)],
+            "largeur": round(mx[0] - mn[0], 3), "hauteur": round(mx[1] - mn[1], 3)}
 
 
 def open_backend(kind: str = "auto", dxf_path: str = "dessin.dxf") -> DrawingBackend:

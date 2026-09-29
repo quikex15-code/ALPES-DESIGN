@@ -1,16 +1,19 @@
-"""Lancement : python -m autocad_assistant [--mode auto|autocad|dxf] [--dxf fichier.dxf] [--console]"""
+"""Lancement : python -m autocad_assistant [--mode auto|autocad|dxf] [--dxf fichier.dxf]
+                                          [--profils DOSSIER] [--console]"""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 
 from .agent import DEFAULT_MODEL, DrawingAssistant
 from .backends import open_backend
+from .profiles import ProfileLibrary
 
 
-def run_console(backend, model: str) -> None:
-    assistant = DrawingAssistant(backend, model=model)
+def run_console(backend, model: str, library=None) -> None:
+    assistant = DrawingAssistant(backend, model=model, library=library)
     print(f"Connecté à : {backend.name}. Tapez 'quitter' pour sortir.\n")
 
     def show(name, args, result, is_error):
@@ -36,15 +39,23 @@ def main() -> None:
                         help="auto : AutoCAD s'il est ouvert, sinon fichier DXF.")
     parser.add_argument("--dxf", default="dessin.dxf", help="Fichier DXF (mode dxf).")
     parser.add_argument("--model", default=DEFAULT_MODEL, help="Modèle Claude à utiliser.")
+    parser.add_argument("--profils", default=os.environ.get("ALPES_PROFILS"),
+                        help="Dossier de la bibliothèque de profils (DWG/DXF). "
+                             "Par défaut : variable d'environnement ALPES_PROFILS.")
     parser.add_argument("--console", action="store_true",
                         help="Dialogue dans le terminal au lieu de la fenêtre.")
     args = parser.parse_args()
 
+    library = None
+    if args.profils:
+        library = ProfileLibrary(args.profils)
+        print(f"Bibliothèque de profils : {len(library)} profils dans {library.folder}")
+
     if args.console:
-        run_console(open_backend(args.mode, args.dxf), args.model)
+        run_console(open_backend(args.mode, args.dxf), args.model, library)
     else:
         from .gui import ChatWindow
-        ChatWindow(lambda: open_backend(args.mode, args.dxf), args.model).run()
+        ChatWindow(lambda: open_backend(args.mode, args.dxf), args.model, library).run()
 
 
 if __name__ == "__main__":

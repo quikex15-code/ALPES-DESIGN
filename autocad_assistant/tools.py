@@ -6,6 +6,7 @@ import json
 from typing import Any, Callable
 
 from .backends import DrawingBackend
+from .profiles import ProfileLibrary
 
 _POINT = {
     "type": "array",
@@ -80,6 +81,43 @@ TOOLS: list[dict] = [
           {"path": {"type": "string"}}, []),
 ]
 
+PROFILE_TOOLS: list[dict] = [
+    _tool("search_profiles",
+          "Cherche dans la bibliothèque de profils (Forster, etc.) par référence, série ou "
+          "mots de la description. Requête vide = aperçu des séries disponibles.",
+          {"query": {"type": "string"}}, ["query"]),
+    _tool("insert_profile",
+          "Insère un profil de la bibliothèque comme bloc, avec son point de base sur "
+          "'position'. Retourne l'encombrement réel (min, max, largeur, hauteur) pour "
+          "aligner ou coter la suite.",
+          {"reference": {"type": "string",
+                         "description": "Référence ou clé « série/référence » trouvée par "
+                                        "search_profiles."},
+           "position": _POINT,
+           "rotation": {"type": "number", "description": "Rotation en degrés."},
+           "scale": {"type": "number", "exclusiveMinimum": 0,
+                     "description": "Échelle (1 par défaut)."},
+           "mirror": {"type": "boolean", "description": "Symétrie gauche/droite."},
+           "layer": _LAYER},
+          ["reference", "position"]),
+]
+
+
+def tools_for(library: ProfileLibrary | None) -> list[dict]:
+    return TOOLS + PROFILE_TOOLS if library else TOOLS
+
+
+def _profile_handlers(b: DrawingBackend, lib: ProfileLibrary) -> dict[str, Callable[[dict], Any]]:
+    def insert_profile(a):
+        profile = lib.get(a["reference"])
+        handle, box = b.insert_block_file(str(profile.path), profile.block_name, a["position"],
+                                          a.get("rotation", 0.0), a.get("scale", 1.0),
+                                          a.get("mirror", False), a.get("layer"))
+        return {"handle": handle, "profil": profile.key, "encombrement": box}
+
+    return {"search_profiles": lambda a: lib.search(a["query"]),
+            "insert_profile": insert_profile}
+
 
 def _handlers(b: DrawingBackend) -> dict[str, Callable[[dict], Any]]:
     def create_layer(a):
@@ -111,10 +149,13 @@ def _handlers(b: DrawingBackend) -> dict[str, Callable[[dict], Any]]:
 class ToolExecutor:
     """Exécute les appels d'outils de Claude sur un moteur de dessin."""
 
-    def __init__(self, backend: DrawingBackend) -> None:
+    def __init__(self, backend: DrawingBackend, library: ProfileLibrary | None = None) -> None:
         self.backend = backend
+        self.tools = tools_for(library)
         self._handlers = _handlers(backend)
-        self._required = {t["name"]: t["input_schema"]["required"] for t in TOOLS}
+        if library:
+            self._handlers.update(_profile_handlers(backend, library))
+        self._required = {t["name"]: t["input_schema"]["required"] for t in self.tools}
 
     def run(self, name: str, args: dict) -> tuple[str, bool]:
         """Retourne (résultat JSON, est_une_erreur)."""
