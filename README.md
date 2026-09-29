@@ -147,10 +147,10 @@ cartouche remplace l'ancien.
 ```json
 {
   "nom": "ALPES DESIGN",
-  "adresse": ["12 rue des Alpes", "74000 Annecy"],
-  "telephone": "Tél. 04 00 00 00 00",
-  "email": "contact@alpes-design.fr",
-  "site": "www.alpes-design.fr",
+  "adresse": ["Genève, Suisse"],
+  "telephone": "Tél. +41 78 250 58 09",
+  "email": "contact@alpes-design.com",
+  "site": "",
   "logo": "logo.dwg",
   "dessinateur": "J. Martin",
   "format_par_defaut": "A3"
