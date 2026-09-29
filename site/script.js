@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  var CONTACT_EMAIL = 'contact@alpes-design.ch';
+  var CONTACT_EMAIL = 'contact@alpes-design.com';
   var DURATION = 300; // ms — no transition longer than 0.3s
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
