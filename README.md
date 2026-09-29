@@ -153,3 +153,18 @@ python -m pytest
 
 Les tests simulent Claude et vérifient le fichier DXF produit ; ils ne consomment
 pas de crédits API.
+
+## Site web vitrine (`site/`)
+
+Site statique de l'agence (HTML/CSS/JS vanilla, aucune dépendance) :
+`site/index.html`, `site/styles.css`, `site/script.js`.
+
+- Aperçu local : ouvrez `site/index.html` dans un navigateur, ou
+  `python -m http.server -d site 8000` puis http://localhost:8000.
+- Mise en ligne : déposez le dossier `site/` tel quel sur n'importe quel hébergement
+  statique (GitHub Pages, Netlify, Infomaniak…).
+- Formulaire de contact : validation côté client, puis ouverture de la messagerie
+  du visiteur avec la demande pré-remplie vers `contact@alpes-design.ch`
+  (constante `CONTACT_EMAIL` dans `script.js`). Pour un envoi direct sans
+  messagerie, branchez un service de formulaires (Formspree, Netlify Forms…).
+- À compléter : le numéro de téléphone (`+41 XX XXX XX XX` et `tel:` dans `index.html`).
