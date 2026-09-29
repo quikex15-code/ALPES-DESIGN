@@ -28,6 +28,10 @@ indispensable, par exemple), pose une question courte. Sinon choisis des valeurs
 raisonnables et indique-les.
 - À la fin, cadre la vue (zoom_extents) et résume en une ou deux phrases ce qui a été \
 dessiné, avec les dimensions principales. Réponds en français.
+- Cartouche : quand l'utilisateur demande un cartouche, un cadre, une mise en page ou \
+un plan à imprimer, termine le dessin puis appelle draw_title_block en dernier (l'échelle \
+se calcule sur le dessin existant). Déduis le titre du contexte si l'utilisateur ne le \
+donne pas. Signale tout avertissement renvoyé (dessin qui dépasse du cadre).
 """
 
 PROFILES_PROMPT = """
@@ -51,9 +55,9 @@ class DrawingAssistant:
 
     def __init__(self, backend: DrawingBackend, model: str = DEFAULT_MODEL,
                  client: anthropic.Anthropic | None = None, max_steps: int = 40,
-                 library: ProfileLibrary | None = None) -> None:
+                 library: ProfileLibrary | None = None, company: dict | None = None) -> None:
         self.backend = backend
-        self.executor = ToolExecutor(backend, library)
+        self.executor = ToolExecutor(backend, library, company)
         self.system = SYSTEM_PROMPT + (PROFILES_PROMPT if library else "")
         self.model = model
         self.client = client or anthropic.Anthropic()

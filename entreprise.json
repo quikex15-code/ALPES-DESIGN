@@ -1,0 +1,10 @@
+{
+  "nom": "ALPES DESIGN",
+  "adresse": ["Adresse ligne 1", "Code postal Ville"],
+  "telephone": "Tél. 00 00 00 00 00",
+  "email": "contact@exemple.fr",
+  "site": "",
+  "logo": "",
+  "dessinateur": "",
+  "format_par_defaut": "A3"
+}

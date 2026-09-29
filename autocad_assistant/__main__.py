@@ -10,10 +10,11 @@ import os
 from .agent import DEFAULT_MODEL, DrawingAssistant
 from .backends import open_backend
 from .profiles import ProfileLibrary
+from .titleblock import load_company
 
 
-def run_console(backend, model: str, library=None) -> None:
-    assistant = DrawingAssistant(backend, model=model, library=library)
+def run_console(backend, model: str, library=None, company=None) -> None:
+    assistant = DrawingAssistant(backend, model=model, library=library, company=company)
     print(f"Connecté à : {backend.name}. Tapez 'quitter' pour sortir.\n")
 
     def show(name, args, result, is_error):
@@ -42,6 +43,10 @@ def main() -> None:
     parser.add_argument("--profils", default=os.environ.get("ALPES_PROFILS"),
                         help="Dossier de la bibliothèque de profils (DWG/DXF). "
                              "Par défaut : variable d'environnement ALPES_PROFILS.")
+    parser.add_argument("--entreprise", default=None,
+                        help="Fichier entreprise.json pour le cartouche (par défaut : "
+                             "ALPES_ENTREPRISE, puis entreprise.json du dossier courant "
+                             "ou du projet).")
     parser.add_argument("--console", action="store_true",
                         help="Dialogue dans le terminal au lieu de la fenêtre.")
     args = parser.parse_args()
@@ -51,11 +56,15 @@ def main() -> None:
         library = ProfileLibrary(args.profils)
         print(f"Bibliothèque de profils : {len(library)} profils dans {library.folder}")
 
+    company = load_company(args.entreprise)
+    print(f"Cartouche au nom de : {company['nom']}")
+
     if args.console:
-        run_console(open_backend(args.mode, args.dxf), args.model, library)
+        run_console(open_backend(args.mode, args.dxf), args.model, library, company)
     else:
         from .gui import ChatWindow
-        ChatWindow(lambda: open_backend(args.mode, args.dxf), args.model, library).run()
+        ChatWindow(lambda: open_backend(args.mode, args.dxf), args.model, library,
+                   company).run()
 
 
 if __name__ == "__main__":

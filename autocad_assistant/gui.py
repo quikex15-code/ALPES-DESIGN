@@ -18,13 +18,15 @@ WELCOME = (
     "  • « Dessine une pièce de 4 m sur 3 m avec des murs de 20 cm et cote-la »\n"
     "  • « Ajoute une porte de 90 cm au milieu du mur du bas »\n"
     "  • « Une platine 200×150 avec 4 trous Ø12 à 20 mm des bords »\n"
+    "  • « Ajoute le cartouche en A3, plan n° 12, client Dupont »\n"
 )
 
 
 class ChatWindow:
     def __init__(self, make_backend: Callable[[], DrawingBackend], model: str,
-                 library: ProfileLibrary | None = None) -> None:
+                 library: ProfileLibrary | None = None, company: dict | None = None) -> None:
         self.library = library
+        self.company = company
         self.root = tk.Tk()
         self.root.title("Assistant de dessin AutoCAD")
         self.root.geometry("620x680")
@@ -65,7 +67,8 @@ class ChatWindow:
             except ImportError:
                 pass
             backend = make_backend()
-            assistant = DrawingAssistant(backend, model=model, library=self.library)
+            assistant = DrawingAssistant(backend, model=model, library=self.library,
+                                         company=self.company)
         except Exception as exc:
             self.ui_queue.put(("error", f"Démarrage impossible : {exc}\n"))
             return

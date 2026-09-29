@@ -53,6 +53,7 @@ Options :
 | `--mode autocad` | Exige AutoCAD (erreur s'il n'est pas ouvert) |
 | `--mode dxf --dxf plan.dxf` | Dessine dans un fichier DXF (sans AutoCAD, aussi sur Mac/Linux) |
 | `--console` | Dialogue dans le terminal au lieu de la fenêtre |
+| `--entreprise <fichier>` | Coordonnées pour le cartouche (par défaut `entreprise.json`) |
 | `--profils <dossier>` | Bibliothèque de profils (voir ci-dessous) |
 | `--model <id>` | Autre modèle Claude (par défaut `claude-opus-5-5`) |
 
@@ -123,6 +124,44 @@ les `.dxf` sont lus directement ; les `.dwg` nécessitent l'outil gratuit
 > Les fichiers de la bibliothèque restent sur votre ordinateur : inutile (et
 > déconseillé, pour des questions de droits) de les ajouter à ce dépôt.
 
+## Cartouche de l'entreprise
+
+Demandez simplement : « Ajoute le cartouche en A3, plan n° 12, client Dupont ».
+L'assistant dessine alors :
+
+- **le cadre de la feuille** (A4 à A0, paysage ou portrait), centré sur le dessin ;
+- **l'échelle choisie automatiquement** (1:1, 1:2, 1:5, 1:10, 1:20, 1:25, 1:50…), la
+  plus grande à laquelle le dessin tient dans la feuille (ou celle que vous imposez) ;
+- **le cartouche** en bas à droite avec le logo, le nom et les coordonnées de
+  l'entreprise, puis le projet, le client, le titre, le dessinateur, la date,
+  l'échelle, le format, le n° de plan et l'indice.
+
+![Exemple de cartouche](docs/exemple-cartouche.png)
+
+Le cadre est dessiné dans l'espace objet, à l'échelle, sur le calque `CARTOUCHE` :
+imprimez-le « fenêtre » sur le cadre extérieur, à l'échelle indiquée. Redemander un
+cartouche remplace l'ancien.
+
+**Coordonnées de l'entreprise** : modifiez le fichier `entreprise.json` :
+
+```json
+{
+  "nom": "ALPES DESIGN",
+  "adresse": ["12 rue des Alpes", "74000 Annecy"],
+  "telephone": "Tél. 04 00 00 00 00",
+  "email": "contact@alpes-design.fr",
+  "site": "www.alpes-design.fr",
+  "logo": "logo.dwg",
+  "dessinateur": "J. Martin",
+  "format_par_defaut": "A3"
+}
+```
+
+`logo` est un fichier DWG (ou DXF) placé à côté de `entreprise.json`. Il est mis à
+l'échelle automatiquement dans le cartouche. Laissez-le vide s'il n'y a pas de logo.
+Pour utiliser un autre fichier : `--entreprise chemin\entreprise.json` ou la variable
+`ALPES_ENTREPRISE`.
+
 ## Conventions
 
 - Unités : millimètres (dites « en mètres » ou « en cm » si besoin, l'assistant convertit).
@@ -136,6 +175,7 @@ les `.dxf` sont lus directement ; les `.dwg` nécessitent l'outil gratuit
 | `autocad_assistant/backends.py` | Moteurs de dessin : AutoCAD (COM) et DXF (ezdxf) |
 | `autocad_assistant/tools.py` | Outils proposés à Claude et leur exécution |
 | `autocad_assistant/profiles.py` | Bibliothèque de profils : lecture du dossier, catalogue, recherche |
+| `autocad_assistant/titleblock.py` | Cadre et cartouche automatiques |
 | `autocad_assistant/agent.py` | Boucle de conversation avec Claude |
 | `autocad_assistant/gui.py` | Fenêtre de dialogue (tkinter) |
 | `autocad_assistant/__main__.py` | Point d'entrée et options |

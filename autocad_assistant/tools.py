@@ -7,6 +7,8 @@ from typing import Any, Callable
 
 from .backends import DrawingBackend, _bbox
 from .profiles import ProfileLibrary
+from .titleblock import TOOL as TITLE_BLOCK_TOOL
+from .titleblock import draw_title_block, load_company
 
 _POINT = {
     "type": "array",
@@ -118,7 +120,7 @@ def _anchor_point(box: dict, anchor: str) -> tuple[float, float]:
 
 
 def tools_for(library: ProfileLibrary | None) -> list[dict]:
-    return TOOLS + PROFILE_TOOLS if library else TOOLS
+    return TOOLS + [TITLE_BLOCK_TOOL] + (PROFILE_TOOLS if library else [])
 
 
 def _profile_handlers(b: DrawingBackend, lib: ProfileLibrary) -> dict[str, Callable[[dict], Any]]:
@@ -172,10 +174,13 @@ def _handlers(b: DrawingBackend) -> dict[str, Callable[[dict], Any]]:
 class ToolExecutor:
     """Exécute les appels d'outils de Claude sur un moteur de dessin."""
 
-    def __init__(self, backend: DrawingBackend, library: ProfileLibrary | None = None) -> None:
+    def __init__(self, backend: DrawingBackend, library: ProfileLibrary | None = None,
+                 company: dict | None = None) -> None:
         self.backend = backend
+        self.company = company or load_company()
         self.tools = tools_for(library)
         self._handlers = _handlers(backend)
+        self._handlers["draw_title_block"] = lambda a: draw_title_block(backend, self.company, a)
         if library:
             self._handlers.update(_profile_handlers(backend, library))
         self._required = {t["name"]: t["input_schema"]["required"] for t in self.tools}

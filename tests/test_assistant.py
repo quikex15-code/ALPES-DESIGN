@@ -61,7 +61,8 @@ def test_conversation_draws_into_dxf(tmp_path):
     second = client.requests[1]["messages"]
     assert [m["role"] for m in second] == ["user", "assistant", "user"]
     assert len(second[2]["content"]) == 5
-    assert client.requests[0]["tools"] is TOOLS
+    names = [t["name"] for t in client.requests[0]["tools"]]
+    assert names == [t["name"] for t in TOOLS] + ["draw_title_block"]
 
     doc = ezdxf.readfile(path)  # sauvegardé automatiquement
     types = sorted(e.dxftype() for e in doc.modelspace())

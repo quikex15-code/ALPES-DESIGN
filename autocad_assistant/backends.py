@@ -64,6 +64,10 @@ class DrawingBackend(ABC):
     def move(self, handle: str, dx: float, dy: float) -> None: ...
 
     @abstractmethod
+    def extents(self, exclude_layers: Sequence[str] = ()) -> dict | None:
+        """Encombrement de tout le dessin (hors calques exclus), None s'il est vide."""
+
+    @abstractmethod
     def zoom_extents(self) -> None: ...
 
     @abstractmethod
@@ -188,6 +192,24 @@ class AutoCADBackend(DrawingBackend):
             ent = self.msp.Item(i)
             result.append({"handle": ent.Handle, "type": ent.ObjectName, "layer": ent.Layer})
         return result
+
+    def extents(self, exclude_layers=()):
+        excluded = {name.upper() for name in exclude_layers}
+        mins, maxs = [], []
+        for i in range(self.msp.Count):
+            ent = self.msp.Item(i)
+            if ent.Layer.upper() in excluded:
+                continue
+            try:
+                mn, mx = ent.GetBoundingBox()
+            except Exception:  # certains objets (ex. rayons) n'ont pas d'encombrement
+                continue
+            mins.append(mn)
+            maxs.append(mx)
+        if not mins:
+            return None
+        return _bbox((min(p[0] for p in mins), min(p[1] for p in mins)),
+                     (max(p[0] for p in maxs), max(p[1] for p in maxs)))
 
     def move(self, handle, dx, dy):
         ent = self.doc.HandleToObject(handle)
@@ -315,6 +337,13 @@ class DXFBackend(DrawingBackend):
     def list_entities(self):
         return [{"handle": e.dxf.handle, "type": e.dxftype(), "layer": e.dxf.layer}
                 for e in self.msp]
+
+    def extents(self, exclude_layers=()):
+        from ezdxf import bbox
+
+        excluded = {name.upper() for name in exclude_layers}
+        ext = bbox.extents(e for e in self.msp if e.dxf.layer.upper() not in excluded)
+        return _bbox(ext.extmin, ext.extmax) if ext.has_data else None
 
     def move(self, handle, dx, dy):
         self.doc.entitydb[handle].translate(dx, dy, 0)
