@@ -123,3 +123,48 @@ class ProfileLibrary:
             keys = ", ".join(p.key for p in by_ref)
             raise KeyError(f"Référence ambiguë « {reference} », précisez la série : {keys}")
         raise KeyError(f"Profil « {reference} » introuvable. Utilisez search_profiles.")
+
+
+def check_library(folder: str | Path) -> str:
+    """Rapport sur la bibliothèque + modèle de catalogue CSV à compléter dans Excel."""
+    lib = ProfileLibrary(folder)
+    lines = [f"Dossier : {lib.folder}", f"Profils trouvés : {len(lib)}"]
+    lines += [f"  - {serie} : {n}" for serie, n in lib.series().items()]
+
+    by_ref: dict[str, list[str]] = {}
+    for p in lib.profiles:
+        by_ref.setdefault(_normalize(p.reference), []).append(p.key)
+    doubles = [keys for keys in by_ref.values() if len(keys) > 1]
+    if doubles:
+        lines.append(f"Références présentes dans plusieurs séries ({len(doubles)}) — "
+                     "l'assistant demandera de préciser la série :")
+        lines += [f"  - {', '.join(keys)}" for keys in doubles[:20]]
+
+    if lib.profiles and not any(p.path.suffix.lower() == ".dwg" for p in lib.profiles):
+        lines.append("Aucun .dwg : en mode AutoCAD, les profils doivent être en .dwg.")
+
+    missing = [p for p in lib.profiles if not p.info]
+    if missing:
+        existing = any((lib.folder / n).exists() for n in CATALOG_NAMES)
+        target = lib.folder / ("catalogue_a_completer.csv" if existing else "catalogue.csv")
+        with open(target, "w", encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f, delimiter=";")
+            writer.writerow(["Reference", "Serie", "Description"])
+            for p in missing:
+                writer.writerow([p.reference, p.series, ""])
+        lines.append(f"{len(missing)} profils sans description. Modèle écrit : {target}")
+        if existing:
+            lines.append("  → complétez-le puis copiez ses lignes dans votre catalogue.")
+        else:
+            lines.append("  → ouvrez-le dans Excel et remplissez la colonne Description.")
+    else:
+        lines.append("Tous les profils ont une description dans le catalogue.")
+    return "\n".join(lines)
+
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) != 2:
+        sys.exit("Usage : python -m autocad_assistant.profiles DOSSIER_DES_PROFILS")
+    print(check_library(sys.argv[1]))

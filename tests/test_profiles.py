@@ -91,3 +91,41 @@ def test_insert_unknown_profile_is_reported(tmp_path, library):
 def test_profile_tools_absent_without_library(tmp_path):
     ex = ToolExecutor(DXFBackend(str(tmp_path / "x.dxf")))
     assert "insert_profile" not in {t["name"] for t in ex.tools}
+
+
+def test_anchor_places_corner_on_position(tmp_path, library):
+    # Profil dessiné loin de son point de base, comme dans certains DWG fournisseurs.
+    make_profile_far = tmp_path / "Loin" / "L1.dxf"
+    make_profile(make_profile_far, 40, 30)
+    doc = ezdxf.readfile(make_profile_far)
+    for e in doc.modelspace():
+        e.translate(5000, 2000, 0)
+    doc.saveas(make_profile_far)
+    lib = ProfileLibrary(tmp_path / "Loin")
+    ex = ToolExecutor(DXFBackend(str(tmp_path / "x.dxf")), lib)
+
+    result, err = ex.run("insert_profile", {"reference": "L1", "position": [100, 100],
+                                            "anchor": "bas_gauche"})
+    assert not err, result
+    assert json.loads(result)["encombrement"]["min"] == [100, 100]
+
+    result, err = ex.run("insert_profile", {"reference": "L1", "position": [0, 0],
+                                            "anchor": "centre"})
+    box = json.loads(result)["encombrement"]
+    assert box["min"] == [-20, -15] and box["max"] == [20, 15]
+
+    ex.backend.flush()
+    from ezdxf import bbox
+    ext = bbox.extents([ezdxf.readfile(tmp_path / "x.dxf").modelspace().query("INSERT")[0]])
+    assert tuple(ext.extmin)[:2] == pytest.approx((100, 100))
+
+
+def test_check_library_writes_catalog_template(library):
+    from autocad_assistant.profiles import check_library
+
+    report = check_library(library.folder)
+    assert "Profils trouvés : 4" in report
+    assert "Divers/U1001, Forster Unico/U1001" in report
+    template = (library.folder / "catalogue_a_completer.csv").read_text("utf-8-sig")
+    assert template.splitlines()[0] == "Reference;Serie;Description"
+    assert "U1001;Forster Unico;" in template and "U1002" not in template

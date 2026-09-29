@@ -61,6 +61,9 @@ class DrawingBackend(ABC):
     def delete(self, handles: Sequence[str]) -> list[str]: ...
 
     @abstractmethod
+    def move(self, handle: str, dx: float, dy: float) -> None: ...
+
+    @abstractmethod
     def zoom_extents(self) -> None: ...
 
     @abstractmethod
@@ -186,6 +189,11 @@ class AutoCADBackend(DrawingBackend):
             result.append({"handle": ent.Handle, "type": ent.ObjectName, "layer": ent.Layer})
         return result
 
+    def move(self, handle, dx, dy):
+        ent = self.doc.HandleToObject(handle)
+        ent.Move(self._pt((0, 0)), self._pt((dx, dy)))
+        ent.Update()
+
     def delete(self, handles):
         deleted = []
         for h in handles:
@@ -307,6 +315,9 @@ class DXFBackend(DrawingBackend):
     def list_entities(self):
         return [{"handle": e.dxf.handle, "type": e.dxftype(), "layer": e.dxf.layer}
                 for e in self.msp]
+
+    def move(self, handle, dx, dy):
+        self.doc.entitydb[handle].translate(dx, dy, 0)
 
     def delete(self, handles):
         deleted = []

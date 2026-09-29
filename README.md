@@ -87,6 +87,17 @@ U1002;Dormant ouvrant intérieur;2,1
 F2001;Profilé coupe-feu EI30;3,4
 ```
 
+**Vérifiez le dossier** (nombre de profils par série, références en double) et
+générez le modèle de catalogue à compléter dans Excel :
+
+```bat
+python -m autocad_assistant.profiles "C:\Profils"
+```
+
+S'il n'y a pas encore de catalogue, la commande crée `catalogue.csv` avec la liste de
+vos références. Remplissez ensuite la colonne `Description` dans Excel. Si le
+catalogue existe déjà, elle écrit les profils manquants dans `catalogue_a_completer.csv`.
+
 **3. Lancez l'assistant en indiquant le dossier :**
 
 ```bat
@@ -99,8 +110,10 @@ Vous pouvez alors demander : « Insère un dormant Forster Unico à l'origine et
 ouvrant à côté », « Quels profils coupe-feu EI30 as-tu ? », « Coupe verticale d'un
 châssis de 1200 mm avec le profil U1002 en haut et en bas »…
 
-Les profils sont insérés comme **blocs** (placés sur leur point de base, avec
-rotation, symétrie et échelle possibles). L'assistant reçoit leur encombrement réel
+Les profils sont insérés comme **blocs**, avec rotation, symétrie et échelle
+possibles. Le point placé à l'endroit demandé est au choix : le point de base du
+DWG, un coin (bas gauche, haut droite…) ou le centre du profil. C'est utile quand le
+fichier du fabricant a son point de base loin du dessin. L'assistant reçoit leur encombrement réel
 pour aligner et coter la suite.
 
 Formats : en mode AutoCAD, les profils doivent être en `.dwg`. En mode fichier DXF,

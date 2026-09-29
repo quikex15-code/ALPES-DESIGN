@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any, Callable
 
-from .backends import DrawingBackend
+from .backends import DrawingBackend, _bbox
 from .profiles import ProfileLibrary
 
 _POINT = {
@@ -81,19 +81,26 @@ TOOLS: list[dict] = [
           {"path": {"type": "string"}}, []),
 ]
 
+ANCHORS = ["base", "centre", "bas_gauche", "bas_droite", "haut_gauche", "haut_droite"]
+
 PROFILE_TOOLS: list[dict] = [
     _tool("search_profiles",
           "Cherche dans la bibliothèque de profils (Forster, etc.) par référence, série ou "
           "mots de la description. Requête vide = aperçu des séries disponibles.",
           {"query": {"type": "string"}}, ["query"]),
     _tool("insert_profile",
-          "Insère un profil de la bibliothèque comme bloc, avec son point de base sur "
-          "'position'. Retourne l'encombrement réel (min, max, largeur, hauteur) pour "
-          "aligner ou coter la suite.",
+          "Insère un profil de la bibliothèque comme bloc. 'anchor' indique quel point du "
+          "profil est placé sur 'position' (après rotation/symétrie). Retourne l'encombrement "
+          "réel (min, max, largeur, hauteur) pour aligner ou coter la suite.",
           {"reference": {"type": "string",
                          "description": "Référence ou clé « série/référence » trouvée par "
                                         "search_profiles."},
            "position": _POINT,
+           "anchor": {"type": "string", "enum": ANCHORS,
+                      "description": "Point du profil placé sur 'position'. "
+                                     "'base' = point de base du fichier DWG (par défaut). "
+                                     "Utilise un coin ou 'centre' si le point de base du "
+                                     "fichier est éloigné du profil."},
            "rotation": {"type": "number", "description": "Rotation en degrés."},
            "scale": {"type": "number", "exclusiveMinimum": 0,
                      "description": "Échelle (1 par défaut)."},
@@ -103,6 +110,13 @@ PROFILE_TOOLS: list[dict] = [
 ]
 
 
+def _anchor_point(box: dict, anchor: str) -> tuple[float, float]:
+    (x0, y0), (x1, y1) = box["min"], box["max"]
+    x = {"gauche": x0, "droite": x1}.get(anchor.split("_")[-1], (x0 + x1) / 2)
+    y = {"bas": y0, "haut": y1}.get(anchor.split("_")[0], (y0 + y1) / 2)
+    return x, y
+
+
 def tools_for(library: ProfileLibrary | None) -> list[dict]:
     return TOOLS + PROFILE_TOOLS if library else TOOLS
 
@@ -110,9 +124,18 @@ def tools_for(library: ProfileLibrary | None) -> list[dict]:
 def _profile_handlers(b: DrawingBackend, lib: ProfileLibrary) -> dict[str, Callable[[dict], Any]]:
     def insert_profile(a):
         profile = lib.get(a["reference"])
+        anchor = a.get("anchor", "base")
+        if anchor not in ANCHORS:
+            raise ValueError(f"anchor doit être l'une de ces valeurs : {', '.join(ANCHORS)}")
         handle, box = b.insert_block_file(str(profile.path), profile.block_name, a["position"],
                                           a.get("rotation", 0.0), a.get("scale", 1.0),
                                           a.get("mirror", False), a.get("layer"))
+        if anchor != "base" and box:
+            ax, ay = _anchor_point(box, anchor)
+            dx, dy = a["position"][0] - ax, a["position"][1] - ay
+            b.move(handle, dx, dy)
+            box = _bbox((box["min"][0] + dx, box["min"][1] + dy),
+                        (box["max"][0] + dx, box["max"][1] + dy))
         return {"handle": handle, "profil": profile.key, "encombrement": box}
 
     return {"search_profiles": lambda a: lib.search(a["query"]),
